@@ -14,10 +14,11 @@ public class Boids : MonoBehaviour
     Agent[] agents;
 
     [SerializeField]
-    float agentRadius = 2.0f;
+    float agentRadius = 10.0f;
 
     [SerializeField]
     float separationWeight = 1.0f, cohesionWeight = 1.0f, alignmentWeight = 1.0f;
+
 
     private void Awake()
     {
@@ -27,9 +28,13 @@ public class Boids : MonoBehaviour
         {
             Vector3 position = Vector3.up * Random.Range(0, 10)
                 + Vector3.right * Random.Range(0, 10) + Vector3.forward * Random.Range(0, 10);
-            agentlist.Add(Instantiate(agentPrefab, position, Quaternion.identity).GetComponent<Agent>());
 
+            Agent agent = Instantiate(agentPrefab, position, Quaternion.identity).GetComponent<Agent>();
+            agent.radius = agentRadius;
+
+            agentlist.Add(agent);
         }
+
         agents = agentlist.ToArray();
     }
 
@@ -38,36 +43,64 @@ public class Boids : MonoBehaviour
     {
         foreach (Agent a in agents)
         {
+            a.neightbours.Clear();
+
             a.velocity = Vector3.zero;
-            checkForNeightBours(a);
+            a.checkNeightbours();
+
             calculateSeparation(a);
             calculateAlignment(a);
             calculateCohesion(a);
+
             a.updateAgent();
-            a.neightbours.Clear();
+            
          
         }
     }
 
-    void checkForNeightBours(Agent a)
-    {
-        
-    }
 
     void calculateSeparation(Agent a)
     {
-        a.addForce(Vector3.up, Agent.DEBUGforceType.SEPARATION);
-       
+        float distance;
+
+        foreach (Agent n in a.neightbours)
+        {
+            distance = Vector3.Distance(a.transform.position, n.transform.position);
+            distance /= agentRadius;
+            distance = 1 - distance; 
+
+            a.addForce(distance * (a.transform.position - n.transform.position) * separationWeight, Agent.DEBUGforceType.SEPARATION);
+        }
     }
 
     void calculateCohesion(Agent a)
     {
-        a.addForce(Vector3.forward, Agent.DEBUGforceType.COHESION);
+        Vector3 centralPosition = new Vector3();
 
+        foreach (Agent n in a.neightbours)
+        {
+            centralPosition += n.transform.position;
+        }
+
+        centralPosition += a.transform.position;
+        centralPosition /= a.neightbours.Count + 1;
+
+        a.addForce((centralPosition - a.transform.position) * cohesionWeight, Agent.DEBUGforceType.COHESION);
     }
 
     void calculateAlignment(Agent a)
     {
-        a.addForce(Vector3.right, Agent.DEBUGforceType.ALIGNMENT);
+        Vector3 directionVector = new Vector3();
+
+        foreach (Agent n in a.neightbours)
+        {
+            directionVector += n.velocity;
+        }
+
+        directionVector += a.velocity;
+        directionVector /= a.neightbours.Count + 1;
+
+
+        a.addForce(directionVector, Agent.DEBUGforceType.ALIGNMENT);
     }
 }

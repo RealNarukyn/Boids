@@ -7,8 +7,8 @@ public class Agent : MonoBehaviour
     public Vector3 velocity;
 
     public Vector3 separationForce, cohesionForce, alignmentForce;
-    [SerializeField]
-    float radius = 1.0f;
+    
+    public float radius = 1.0f;
 
     public List<Agent> neightbours;
 
@@ -26,8 +26,7 @@ public class Agent : MonoBehaviour
 
         Gizmos.color = Color.white;
         Gizmos.DrawWireSphere(transform.position, radius);
-
-      
+        
     }
 
     private void Awake()
@@ -60,24 +59,14 @@ public class Agent : MonoBehaviour
     {
         transform.position += velocity * Time.deltaTime;
     }
+
     public void checkNeightbours()
     {
         Collider[] checks = Physics.OverlapSphere(transform.position, radius);
         foreach (Collider c in checks)
         {
             neightbours.Add(c.GetComponent<Agent>());
-        }
-       
-    }
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        }
     }
 }
